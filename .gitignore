@@ -1,0 +1,43 @@
+# Dependencias vendidas
+/vendor/
+
+# Archivos binarios
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Archivos de configuración de editor
+.idea/
+*.sublime-workspace
+*.sublime-project
+.vscode/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Archivos de compilación
+*.out
+*.a
+
+# Archivos de depuración
+*.log
+*.pdb
+*.dSYM/
+
+# Archivos de entorno
+.env
+*.env
+
+# Archivos de caché
+.cache/
+*.cache
+
+# Archivos de bases de datos locales
+*.db
+*.sqlite3
+
+# Archivos de prueba
+*.test

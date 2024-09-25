@@ -16,7 +16,36 @@ type AuthController struct {
 // Login maneja la solicitud de inicio de sesión
 func (a *AuthController) Login(c *gin.Context) {
 	// Lógica de inicio de sesión
-	c.String(200, "Iniciar sesión exitoso")
+	var props map[string]string
+	// Parsear el cuerpo de la solicitud en formato JSON al mapa
+	if err := c.BindJSON(&props); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Datos inválidos en el cuerpo de la solicitud",
+		})
+		return
+	}
+	// Intentar crear un nuevo LoginDTO usando los datos recibidos
+	dto, err := auth.NewLoginDTO(props)
+	if err != nil {
+		// Si hay algún error en la creación del DTO, devolver una respuesta con el error
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	// Llamar al servicio de registro de usuario
+	message, err := a.authService.LoginUser(dto)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": message,
+	})
 }
 
 // Register maneja la solicitud de registro

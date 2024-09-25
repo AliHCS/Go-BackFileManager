@@ -5,44 +5,36 @@ import (
 	"errors"
 )
 
-// RegisterDTO es el equivalente a la clase RegisterDto en TypeScript
-type RegisterDTO struct {
+// LoginDTO es el Data Transfer Object para el login
+type LoginDTO struct {
 	Email    string
 	Password string
-	Name     string
 }
 
-// NewRegisterDTO
-func NewRegisterDTO(props map[string]string) (*RegisterDTO, error) {
+// NewLoginDTO valida los datos y devuelve un nuevo LoginDTO si todo es correcto
+func NewLoginDTO(props map[string]string) (*LoginDTO, error) {
 	email, emailOk := props["email"]
 	password, passwordOk := props["password"]
-	name, nameOk := props["name"]
-
 	if !emailOk || email == "" {
 		return nil, errors.New("el Email debe ser necesario")
 	}
-	if !nameOk || name == "" {
-		return nil, errors.New("el name debe ser necesario")
-	}
+
 	if !passwordOk || password == "" {
 		return nil, errors.New("el password debe ser necesario")
 	}
-	if len(password) < 6 {
-		return nil, errors.New("password too short")
-	}
+
 	if !validations.ValidateEmail(email) {
 		return nil, errors.New("el formato del email es inválido")
 	}
-
-	return &RegisterDTO{
+	// Si todas las validaciones pasan, se crea y devuelve el DTO
+	return &LoginDTO{
 		Email:    email,
 		Password: password,
-		Name:     name,
 	}, nil
 }
 
 // Values retorna un mapa con los valores del DTO
-func (dto *RegisterDTO) Values() map[string]interface{} {
+func (dto *LoginDTO) Values() map[string]interface{} {
 	returnObj := make(map[string]interface{})
 
 	if dto.Email != "" {
@@ -50,9 +42,6 @@ func (dto *RegisterDTO) Values() map[string]interface{} {
 	}
 	if dto.Password != "" {
 		returnObj["password"] = dto.Password
-	}
-	if dto.Name != "" {
-		returnObj["name"] = dto.Name
 	}
 
 	return returnObj

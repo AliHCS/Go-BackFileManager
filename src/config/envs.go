@@ -14,6 +14,7 @@ type Config struct {
 	MONGO_USERNAME string
 	MONGO_PASSWORD string
 	GIN_MODE       string
+	SECRET_KEY     string
 }
 
 // CargarEnv carga las variables de entorno desde el archivo .env
@@ -31,6 +32,7 @@ func LoadEnv() *Config {
 		MONGO_USERNAME: getEnv("MONGO_USERNAME", ""),
 		MONGO_PASSWORD: getEnv("MONGO_PASSWORD", ""),
 		GIN_MODE:       getEnv("GIN_MODE", "debug"),
+		SECRET_KEY:     getEnv("SECRET_KEY", "loquesea"),
 	}
 }
 

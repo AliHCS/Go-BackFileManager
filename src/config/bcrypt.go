@@ -14,3 +14,12 @@ func HashPassword(password string) (string, error) {
 	}
 	return string(hashedPassword), nil
 }
+
+// VerifyPassword verifica si la contraseña ingresada coincide con la contraseña hasheada
+func VerifyPassword(hashedPassword, password string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	if err != nil {
+		return errors.New("contraseña incorrecta")
+	}
+	return nil
+}

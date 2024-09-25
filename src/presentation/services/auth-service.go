@@ -20,6 +20,14 @@ type RegisterUserResponse struct {
 	Email string `json:"email"`
 }
 
+// LoginResponse es la respuesta para el login exitoso
+type LoginResponse struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	Token string `json:"token"`
+}
+
 // AuthService maneja la lógica de autenticación
 type AuthService struct {
 	client *mongo.Client // Cliente de MongoDB
@@ -89,4 +97,40 @@ func (a *AuthService) RegisterUser(registerDto *auth.RegisterDTO) (*RegisterUser
 		Email: newUserEntity.Email,
 	}
 	return response, nil
+}
+
+// LoginUser realiza la autenticación de un usuario
+func (a *AuthService) LoginUser(loginDto *auth.LoginDTO) (*LoginResponse, error) {
+	// Verificar si el usuario existe
+	collection := a.client.Database(config.LoadEnv().MONGO_BD_NAME).Collection("users")
+
+	var existingUser models.User
+
+	err := collection.FindOne(context.Background(), bson.M{"email": loginDto.Email}).Decode(&existingUser)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, errors.New("usuario no encontrado")
+		}
+		return nil, err
+	}
+
+	// Verificar si la contraseña es correcta
+	err = config.VerifyPassword(existingUser.Password, loginDto.Password)
+	if err != nil {
+		return nil, err // Retorna el error de contraseña incorrecta
+	}
+
+	// Generar el token JWT
+	token, err := config.GenerateToken(existingUser.Email, existingUser.ID.Hex())
+	if err != nil {
+		return nil, err // Retorna el error si no se pudo generar el token
+	}
+
+	// Retornar respuesta de éxito en el login
+	return &LoginResponse{
+		ID:    existingUser.ID.Hex(), // Convertir el ObjectID a string
+		Name:  existingUser.Name,
+		Email: existingUser.Email,
+		Token: token, // Incluir el token en la respuesta
+	}, nil
 }

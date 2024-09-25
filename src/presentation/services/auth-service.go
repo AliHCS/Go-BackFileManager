@@ -27,10 +27,10 @@ func NewAuthService(client *mongo.Client) *AuthService {
 func (a *AuthService) RegisterUser(registerDto *auth.RegisterDTO) (string, error) {
 	// Verificar si el email ya existe en la base de datos
 	collection := a.client.Database(config.LoadEnv().MONGO_BD_NAME).Collection("users") // Reemplaza con tu base de datos y colección
-	log.Printf("Intentando registrar usuario: %v", registerDto)
 	// Hacer la consulta para verificar si el correo ya existe
 	var existingUser models.User
 	err := collection.FindOne(context.Background(), bson.M{"email": registerDto.Email}).Decode(&existingUser)
+	log.Printf("existingUser: %v", existingUser)
 
 	// Si hay un error que no es mongo.ErrNoDocuments, significa que ocurrió un error
 	if err != nil && err != mongo.ErrNoDocuments {

@@ -54,9 +54,5 @@ func (a *AuthController) Register(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": message,
-		"user": gin.H{
-			"email": dto.Email,
-			"name":  dto.Name,
-		},
 	})
 }

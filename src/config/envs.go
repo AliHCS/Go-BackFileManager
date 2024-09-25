@@ -9,7 +9,11 @@ import (
 
 // Configura la estructura para almacenar las variables de entorno
 type Config struct {
-	PORT string
+	PORT           string
+	MONGO_BD_NAME  string
+	MONGO_USERNAME string
+	MONGO_PASSWORD string
+	GIN_MODE       string
 }
 
 // CargarEnv carga las variables de entorno desde el archivo .env
@@ -22,7 +26,11 @@ func LoadEnv() *Config {
 
 	// Crear una nueva instancia de Config y cargar las variables
 	return &Config{
-		PORT: getEnv("PORT", "8080"),
+		PORT:           getEnv("PORT", "8080"),
+		MONGO_BD_NAME:  getEnv("MONGO_BD_NAME", ""),
+		MONGO_USERNAME: getEnv("MONGO_USERNAME", ""),
+		MONGO_PASSWORD: getEnv("MONGO_PASSWORD", ""),
+		GIN_MODE:       getEnv("GIN_MODE", "debug"),
 	}
 }
 

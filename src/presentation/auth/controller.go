@@ -3,6 +3,7 @@ package auth
 import (
 	"FileManager/src/domain/dtos/auth"
 	"FileManager/src/presentation/services"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -16,16 +17,18 @@ type AuthController struct {
 // Login maneja la solicitud de inicio de sesión
 func (a *AuthController) Login(c *gin.Context) {
 	// Lógica de inicio de sesión
-	var props map[string]string
-	// Parsear el cuerpo de la solicitud en formato JSON al mapa
-	if err := c.BindJSON(&props); err != nil {
+	// Obtener los props del contexto
+	props, exists := c.Get("body")
+	// Imprimir props para depuración
+	fmt.Println("Props recibidos:", props)
+	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Datos inválidos en el cuerpo de la solicitud",
+			"error": "Cuerpo de la solicitud no encontrado",
 		})
 		return
 	}
 	// Intentar crear un nuevo LoginDTO usando los datos recibidos
-	dto, err := auth.NewLoginDTO(props)
+	dto, err := auth.NewLoginDTO(props.(map[string]string))
 	if err != nil {
 		// Si hay algún error en la creación del DTO, devolver una respuesta con el error
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -51,19 +54,18 @@ func (a *AuthController) Login(c *gin.Context) {
 // Register maneja la solicitud de registro
 func (a *AuthController) Register(c *gin.Context) {
 	// Lógica de registro
-	// Crear un mapa para almacenar los datos del request body
-	var props map[string]string
-
-	// Parsear el cuerpo de la solicitud en formato JSON al mapa
-	if err := c.BindJSON(&props); err != nil {
+	// Obtener los props del contexto
+	props, exists := c.Get("body")
+	if !exists {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Datos inválidos en el cuerpo de la solicitud",
+			"error": "Cuerpo de la solicitud no encontrado",
 		})
 		return
 	}
 
 	// Intentar crear un nuevo RegisterDTO usando los datos recibidos
-	dto, err := auth.NewRegisterDTO(props)
+	dto, err := auth.NewRegisterDTO(props.(map[string]string))
+
 	if err != nil {
 		// Si hay algún error en la creación del DTO, devolver una respuesta con el error
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -82,6 +84,6 @@ func (a *AuthController) Register(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": message,
+		"response": message,
 	})
 }

@@ -20,14 +20,6 @@ type RegisterUserResponse struct {
 	Email string `json:"email"`
 }
 
-// LoginResponse es la respuesta para el login exitoso
-type LoginResponse struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Token string `json:"token"`
-}
-
 // AuthService maneja la lógica de autenticación
 type AuthService struct {
 	client *mongo.Client // Cliente de MongoDB
@@ -100,7 +92,7 @@ func (a *AuthService) RegisterUser(registerDto *auth.RegisterDTO) (*RegisterUser
 }
 
 // LoginUser realiza la autenticación de un usuario
-func (a *AuthService) LoginUser(loginDto *auth.LoginDTO) (*LoginResponse, error) {
+func (a *AuthService) LoginUser(loginDto *auth.LoginDTO) (*entities.LoginUserEntity, error) {
 	// Verificar si el usuario existe
 	collection := a.client.Database(config.LoadEnv().MONGO_BD_NAME).Collection("users")
 
@@ -125,12 +117,23 @@ func (a *AuthService) LoginUser(loginDto *auth.LoginDTO) (*LoginResponse, error)
 	if err != nil {
 		return nil, err // Retorna el error si no se pudo generar el token
 	}
+	// Crear la entidad de Login
+	loginData := map[string]string{
+		"id":    existingUser.ID.Hex(), // Convertir el ObjectID a string
+		"name":  existingUser.Name,
+		"email": existingUser.Email,
+		"token": token, // Incluir el token
+	}
+	loginUserEntity, err := entities.NewLoginUserEntity(loginData)
+	if err != nil {
+		return nil, err // Manejar el error de creación de la entidad
+	}
 
 	// Retornar respuesta de éxito en el login
-	return &LoginResponse{
-		ID:    existingUser.ID.Hex(), // Convertir el ObjectID a string
-		Name:  existingUser.Name,
-		Email: existingUser.Email,
-		Token: token, // Incluir el token en la respuesta
+	return &entities.LoginUserEntity{
+		ID:    loginUserEntity.ID,
+		Name:  loginUserEntity.Name,
+		Email: loginUserEntity.Email,
+		Token: loginUserEntity.Token, // Incluir el token en la respuesta
 	}, nil
 }

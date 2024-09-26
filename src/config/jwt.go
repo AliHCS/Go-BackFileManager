@@ -30,3 +30,21 @@ func GenerateToken(email, userID string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(jwtKey)
 }
+
+// VerifyToken verifica si el token JWT es válido
+func VerifyToken(tokenString string) (*Claims, error) {
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return jwtKey, nil
+	})
+
+	if err != nil {
+		return nil, err // Retorna el error si no se pudo analizar el token
+	}
+
+	if !token.Valid {
+		return nil, jwt.ErrSignatureInvalid // Retorna un error si el token no es válido
+	}
+
+	return claims, nil // Retorna los claims si el token es válido
+}

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"FileManager/src/domain/dtos/files"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -22,9 +23,9 @@ func NewFilesService(client *mongo.Client) *FileService {
 }
 
 // UploadFile maneja la carga de un archivo y lo guarda localmente.
-func (fs *FileService) UploadFile(file multipart.File, header *multipart.FileHeader) (string, error) {
-	// Crear un nombre único para el archivo
-	fileName := fmt.Sprintf("%d_%s", time.Now().Unix(), header.Filename)
+func (fs *FileService) UploadFile(file multipart.File, dto *files.UploadFileDto) (string, error) {
+	// Crear un nombre único para el archivo usando el ID de usuario y el tiempo actual
+	fileName := fmt.Sprintf("%s_%d_%s", dto.UserID, time.Now().Unix(), dto.Filename)
 
 	// Definir la ruta donde se almacenará el archivo
 	filePath := filepath.Join("uploads", fileName)

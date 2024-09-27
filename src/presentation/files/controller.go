@@ -1,9 +1,11 @@
 package files
 
 import (
+	"FileManager/src/domain/dtos/files"
 	"FileManager/src/presentation/services"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,7 +19,6 @@ type FileController struct {
 func (f *FileController) Upload(c *gin.Context) {
 	// Lógica de carga de archivos
 	userId := c.PostForm("userID")
-	fmt.Println(userId)
 	// Obtenemos el archivo desde el formulario
 
 	file, err := c.FormFile("file")
@@ -33,8 +34,23 @@ func (f *FileController) Upload(c *gin.Context) {
 	}
 	defer fileContent.Close()
 
+	// Crear una instancia de FileInfo
+	fileInfo := files.FileInfo{
+		OriginalName: file.Filename,
+		Filename:     fmt.Sprintf("%d_%s", time.Now().Unix(), file.Filename), // Generar un nombre único
+		Path:         fmt.Sprintf("uploads/%s", file.Filename),               // Definir la ruta de almacenamiento
+		MimeType:     file.Header.Get("Content-Type"),
+		Size:         file.Size,
+	}
+
+	dto, err := files.NewUploadFileDto(userId, fileInfo)
+	if err != nil {
+		c.String(http.StatusBadRequest, "Error al crear el DTO: %s", err.Error())
+		return
+	}
+
 	// Llamar al servicio
-	filePath, err := f.fileService.UploadFile(fileContent, file)
+	filePath, err := f.fileService.UploadFile(fileContent, dto)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error al guardar el archivo: %s", err.Error())
 		return

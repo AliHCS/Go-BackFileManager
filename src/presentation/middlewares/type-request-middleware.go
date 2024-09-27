@@ -12,16 +12,28 @@ func ParseBodyMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		props := make(map[string]string)
 
-		// Intentar leer el cuerpo en formato JSON
-		if err := c.ShouldBindJSON(&props); err != nil {
-			// Si falla el JSON, intentar leer en formato x-www-form-urlencoded
+		// Verificar si el tipo de contenido es multipart/form-data
+		if c.ContentType() == "multipart/form-data" {
+			// Obtener los datos del formulario
 			if err := c.ShouldBind(&props); err != nil {
-				// Si falla también el formato x-www-form-urlencoded, devolver error
 				c.JSON(http.StatusBadRequest, gin.H{
 					"error": "Datos inválidos en el cuerpo de la solicitud",
 				})
 				c.Abort() // Abortamos la cadena de middleware
 				return
+			}
+		} else {
+			// Intentar leer el cuerpo en formato JSON
+			if err := c.ShouldBindJSON(&props); err != nil {
+				// Si falla el JSON, intentar leer en formato x-www-form-urlencoded
+				if err := c.ShouldBind(&props); err != nil {
+					// Si falla también el formato x-www-form-urlencoded, devolver error
+					c.JSON(http.StatusBadRequest, gin.H{
+						"error": "Datos inválidos en el cuerpo de la solicitud",
+					})
+					c.Abort() // Abortamos la cadena de middleware
+					return
+				}
 			}
 		}
 

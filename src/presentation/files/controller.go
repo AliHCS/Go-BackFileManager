@@ -50,7 +50,7 @@ func (f *FileController) Upload(c *gin.Context) {
 	}
 
 	// Llamar al servicio
-	filePath, err := f.fileService.UploadFile(fileContent, dto)
+	response, err := f.fileService.UploadFile(fileContent, dto)
 	if err != nil {
 		c.String(http.StatusInternalServerError, "Error al guardar el archivo: %s", err.Error())
 		return
@@ -58,12 +58,21 @@ func (f *FileController) Upload(c *gin.Context) {
 	// Devolver respuesta
 	c.JSON(http.StatusOK, gin.H{
 		"message":  "Archivo cargado exitosamente",
-		"filePath": filePath,
+		"response": response,
 	})
 }
 
 // List maneja la solicitud de lista de archivos
 func (f *FileController) List(c *gin.Context) {
-	// Lógica para listar archivos
-	c.String(200, "Lista de archivos")
+	// Llamar al servicio
+	response, err := f.fileService.GetAllFiles()
+	if err != nil {
+		c.String(http.StatusInternalServerError, "Error al guardar el archivo: %s", err.Error())
+		return
+	}
+	// Devolver respuesta
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "Consulta Exitosa",
+		"response": response,
+	})
 }

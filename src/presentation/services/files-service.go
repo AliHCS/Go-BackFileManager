@@ -29,7 +29,7 @@ func NewFilesService(client *mongo.Client) *FileService {
 }
 
 // UploadFile maneja la carga de un archivo y lo guarda localmente.
-func (fs *FileService) UploadFile(file multipart.File, dto *files.UploadFileDto) (string, error) {
+func (fs *FileService) UploadFile(file multipart.File, dto *files.UploadFileDto) ([]interface{}, error) {
 	// Crear un nombre único para el archivo usando el ID de usuario y el tiempo actual
 	fileName := fmt.Sprintf("%s_%d_%s", dto.UserID.Hex(), time.Now().Unix(), dto.Filename)
 
@@ -38,28 +38,28 @@ func (fs *FileService) UploadFile(file multipart.File, dto *files.UploadFileDto)
 
 	// Crear el directorio si no existe
 	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
-		return "", fmt.Errorf("no se pudo crear el directorio: %v", err)
+		return nil, fmt.Errorf("no se pudo crear el directorio: %v", err)
 	}
 
 	// Crear el archivo en la ruta definida
 	out, err := os.Create(filePath)
 	if err != nil {
-		return "", fmt.Errorf("no se pudo crear el archivo: %v", err)
+		return nil, fmt.Errorf("no se pudo crear el archivo: %v", err)
 	}
 	defer out.Close()
 
 	// Copiar el contenido del archivo subido al archivo local
 	if _, err = io.Copy(out, file); err != nil {
-		return "", fmt.Errorf("error al guardar el archivo: %v", err)
+		return nil, fmt.Errorf("error al guardar el archivo: %v", err)
 	}
 
 	// Persistir los datos del archivo en la base de datos
 	err = fs.saveFileMetadata(dto, filePath)
 	if err != nil {
-		return "", fmt.Errorf("error al guardar los metadatos del archivo: %v", err)
+		return nil, fmt.Errorf("error al guardar los metadatos del archivo: %v", err)
 	}
 
-	return filePath, nil
+	return []interface{}{dto.UserID, dto.File}, nil
 }
 
 // saveFileMetadata persiste los metadatos del archivo en MongoDB.
@@ -114,4 +114,24 @@ func (fs *FileService) updateUserFiles(userID primitive.ObjectID, fileID primiti
 	}
 
 	return nil
+}
+
+func (fs *FileService) GetAllFiles() ([]models.File, error) {
+	// Obtener la colección de archivos
+	fileCollection := fs.client.Database(config.LoadEnv().MONGO_BD_NAME).Collection("files")
+
+	cursor, err := fileCollection.Find(context.Background(), bson.M{})
+	if err != nil {
+		return nil, fmt.Errorf("error al obtener archivos: %v", err)
+	}
+	defer cursor.Close(context.Background())
+
+	// Crear un slice para almacenar los resultados
+	var files []models.File
+
+	if err = cursor.All(context.TODO(), &files); err != nil {
+		panic(err)
+	}
+
+	return files, nil
 }

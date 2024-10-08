@@ -61,7 +61,8 @@ func (a *AuthService) RegisterUser(registerDto *auth.RegisterDTO) (*RegisterUser
 	newUser := models.User{
 		Email:    registerDto.Email,
 		Name:     registerDto.Name,
-		Password: registerDto.Password, // O almacenar el hashedPassword
+		Password: registerDto.Password,   // O almacenar el hashedPassword
+		Files:    []primitive.ObjectID{}, // Inicializado en el servicio
 	}
 	result, err := collection.InsertOne(context.Background(), newUser)
 	if err != nil {

@@ -15,7 +15,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // FileService maneja la lógica relacionada con archivos.
@@ -99,18 +98,28 @@ func (fs *FileService) updateUserFiles(userID primitive.ObjectID, fileID primiti
 	// Obtener la colección de usuarios
 	userCollection := fs.client.Database(config.LoadEnv().MONGO_BD_NAME).Collection("users")
 
-	// Actualizar el campo `files` del usuario para incluir el nuevo archivo
-	filter := bson.M{"_id": userID}
-	update := bson.M{
-		"$push": bson.M{
-			"files": fileID, // Añadir el ID del archivo subido al array `files` del usuario
-		},
+	// Primero, obtener el documento del usuario para verificar si ya tiene el campo `files`
+	var user bson.M
+	err := userCollection.FindOne(context.Background(), bson.M{"_id": userID}).Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return fmt.Errorf("usuario no encontrado: %v", err)
+		}
+		return fmt.Errorf("error al buscar el usuario: %v", err)
 	}
 
-	// Ejecutar la actualización
-	_, err := userCollection.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
+	// Si el campo `files` no existe o es `nil`, lo inicializamos
+
+	// Si el campo `files` ya existe, simplemente hacer un push
+	_, err = userCollection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": userID},
+		bson.M{
+			"$push": bson.M{"files": fileID}, // Añadir el archivo al array existente
+		},
+	)
 	if err != nil {
-		return fmt.Errorf("error al actualizar los archivos del usuario: %v", err)
+		return fmt.Errorf("error al hacer push a los archivos del usuario: %v", err)
 	}
 
 	return nil
